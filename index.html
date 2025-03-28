@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>AI Hub</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Pacifico&family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css"
+      rel="stylesheet"
+    />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#8E6FF7",
+              secondary: "#6D4FD3",
+            },
+            borderRadius: {
+              none: "0px",
+              sm: "4px",
+              DEFAULT: "8px",
+              md: "12px",
+              lg: "16px",
+              xl: "20px",
+              "2xl": "24px",
+              "3xl": "32px",
+              full: "9999px",
+              button: "8px",
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      :where([class^="ri-"])::before { content: "\f3c2"; }
+      body { font-family: 'Inter', sans-serif; background-color: #111827; color: #e2e8f0; transition: background-color 0.3s ease, color 0.3s ease; }
+      .menu-overlay { backdrop-filter: blur(4px); }
+      .menu-transition { transition: transform 0.3s ease-in-out; }
+      @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+      }
+      .fade-in { animation: fadeIn 0.3s ease-in-out; }
+      .scrollbar-thin::-webkit-scrollbar {
+      width: 4px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #4b5563;
+      border-radius: 20px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+      background: #6b7280;
+      }
+      /* Highlight AI services in the menu for better visibility */
+      .ai-service {
+      transition: all 0.2s ease;
+      }
+      .ai-service:hover {
+      transform: translateX(5px);
+      background-color: #2d3748;
+      }
+      .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      .modal.active {
+      opacity: 1;
+      visibility: visible;
+      }
+      .modal-content {
+      background-color: #1f2937;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: translateY(20px);
+      transition: transform 0.3s ease;
+      }
+      .modal.active .modal-content {
+      transform: translateY(0);
+      }
+      .bg-white {
+      background-color: #1f2937;
+      }
+      .bg-gray-50 {
+      background-color: #1e293b;
+      }
+      .bg-gray-100 {
+      background-color: #374151;
+      }
+      .text-gray-800 {
+      color: #f3f4f6;
+      }
+      .text-gray-700 {
+      color: #e5e7eb;
+      }
+      .text-gray-600 {
+      color: #d1d5db;
+      }
+      .text-gray-500 {
+      color: #9ca3af;
+      }
+      .text-gray-400 {
+      color: #6b7280;
+      }
+      .border-gray-100 {
+      border-color: #374151;
+      }
+      .hover\:bg-gray-100:hover {
+      background-color: #374151;
+      }
+      .shadow-sm {
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+      }
+      input, textarea {
+      color: #f3f4f6;
+      background-color: transparent;
+      }
+      input::placeholder, textarea::placeholder {
+      color: #6b7280;
+      }
+
+      /* Mobile responsive styles */
+      @media (max-width: 768px) {
+        .container {
+          padding-left: 0.75rem;
+          padding-right: 0.75rem;
+        }
+
+        #sideMenu {
+          width: 85%;
+          max-width: 300px;
+        }
+
+        #chatMessages {
+          height: calc(100vh - 240px) !important;
+        }
+
+        .modal-content {
+          width: 95%;
+          max-height: 80vh;
+        }
+
+        #chatHeader {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        #chatHeader > div:last-child {
+          margin-top: 0.5rem;
+        }
+      }
+
+      @media (max-width: 640px) {
+        .input-container {
+          flex-direction: column;
+        }
+
+        #messageInput {
+          width: 100%;
+        }
+
+        #sendButton {
+          margin-top: 0.5rem;
+          width: 100%;
+          margin-left: 0;
+        }
+
+        .attachment-buttons {
+          margin-bottom: 0.5rem;
+        }
+      }
+
+      /* Fix for mobile touch */
+      @media (hover: none) {
+        .ai-service:hover {
+          transform: none;
+        }
+
+        .ai-service:active {
+          background-color: #2d3748;
+        }
+      }
+    </style>
+  </head>
+  <body class="min-h-screen">
+    <header class="fixed top-0 left-0 right-0 bg-gray-900 shadow-sm z-50">
+      <div
+        class="container mx-auto px-4 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center">
+          <button
+            id="menuBtn"
+            class="w-10 h-10 flex flex-col justify-center items-center space-y-1.5 cursor-pointer mr-3"
+          >
+            <span
+              class="w-6 h-0.5 bg-gray-200 rounded-full transition-all"
+            ></span>
+            <span
+              class="w-6 h-0.5 bg-gray-200 rounded-full transition-all"
+            ></span>
+            <span
+              class="w-6 h-0.5 bg-gray-200 rounded-full transition-all"
+            ></span>
+          </button>
+          <h1
+            class="text-xl font-semibold text-gray-100 flex items-center cursor-pointer"
+            id="homeLink"
+          >
+            AI Hub
+          </h1>
+        </div>
+        <div class="flex items-center">
+          <button
+            id="settingsBtn"
+            class="text-gray-500 hover:text-gray-700 p-2 sm:p-3 rounded-full hover:bg-gray-100 transition-colors w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center"
+          >
+            <i class="ri-settings-4-line"></i>
+          </button>
+          <button
+            id="helpBtn"
+            class="text-gray-500 hover:text-gray-700 p-2 sm:p-3 rounded-full hover:bg-gray-100 transition-colors ml-1 sm:ml-2 w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center"
+          >
+            <i class="ri-question-line"></i>
+          </button>
+        </div>
+      </div>
+    </header>
+    <div
+      id="menuOverlay"
+      class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden menu-overlay"
+    ></div>
+    <nav
+      id="sideMenu"
+      class="fixed top-0 left-0 h-full w-[85%] sm:w-80 max-w-[300px] bg-gray-900 shadow-lg z-50 menu-transition transform -translate-x-full overflow-y-auto scrollbar-thin"
+    >
+      <div class="p-4 sm:p-6">
+        <h2
+          class="text-lg sm:text-xl font-semibold mb-4 sm:mb-6 flex items-center"
+        >
+          <i class="ri-robot-line mr-2 text-primary"></i>
+          AI Services
+        </h2>
+        <div class="grid gap-2">
+          <a
+            href="#"
+            data-ai="chatgpt"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-primary bg-opacity-10 rounded-full"
+            >
+              <i class="ri-openai-line text-xl text-primary"></i>
+            </div>
+            <span class="ml-3 font-medium">ChatGPT</span>
+          </a>
+          <a
+            href="#"
+            data-ai="gemini"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full"
+            >
+              <i class="ri-google-line text-xl text-blue-600"></i>
+            </div>
+            <span class="ml-3 font-medium">Gemini</span>
+          </a>
+          <a
+            href="#"
+            data-ai="claude"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-purple-100 rounded-full"
+            >
+              <i class="ri-robot-line text-xl text-purple-600"></i>
+            </div>
+            <span class="ml-3 font-medium">Claude</span>
+          </a>
+          <a
+            href="#"
+            data-ai="copilot"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-blue-100 rounded-full"
+            >
+              <i class="ri-microsoft-line text-xl text-blue-600"></i>
+            </div>
+            <span class="ml-3 font-medium">Copilot</span>
+          </a>
+          <a
+            href="#"
+            data-ai="perplexity"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-green-100 rounded-full"
+            >
+              <i class="ri-brain-line text-xl text-green-600"></i>
+            </div>
+            <span class="ml-3 font-medium">Perplexity AI</span>
+          </a>
+          <a
+            href="#"
+            data-ai="deepseek"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-orange-100 rounded-full"
+            >
+              <i class="ri-cpu-line text-xl text-orange-600"></i>
+            </div>
+            <span class="ml-3 font-medium">DeepSeek</span>
+          </a>
+          <a
+            href="#"
+            data-ai="groq"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-red-100 rounded-full"
+            >
+              <i class="ri-terminal-box-line text-xl text-red-600"></i>
+            </div>
+            <span class="ml-3 font-medium">Groq</span>
+          </a>
+          <a
+            href="#"
+            data-ai="mistral"
+            class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+          >
+            <div
+              class="w-10 h-10 flex items-center justify-center bg-teal-100 rounded-full"
+            >
+              <i class="ri-cloud-line text-xl text-teal-600"></i>
+            </div>
+            <span class="ml-3 font-medium">Mistral AI</span>
+          </a>
+        </div>
+        <div class="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-700">
+          <h3
+            class="text-base sm:text-lg font-medium mb-3 sm:mb-4 flex items-center"
+          >
+            <i class="ri-image-line mr-2 text-primary"></i>
+            Image Generation
+          </h3>
+          <div class="grid gap-2">
+            <a
+              href="#"
+              data-ai="dalle"
+              class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-primary bg-opacity-10 rounded-full"
+              >
+                <i class="ri-openai-line text-xl text-primary"></i>
+              </div>
+              <span class="ml-3 font-medium">DALL-E 3</span>
+            </a>
+            <a
+              href="#"
+              data-ai="stability"
+              class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-indigo-100 rounded-full"
+              >
+                <i class="ri-bubble-chart-line text-xl text-indigo-600"></i>
+              </div>
+              <span class="ml-3 font-medium">Stability AI (SDXL, SD3)</span>
+            </a>
+            <a
+              href="#"
+              data-ai="leonardo"
+              class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-yellow-100 rounded-full"
+              >
+                <i class="ri-brush-line text-xl text-yellow-600"></i>
+              </div>
+              <span class="ml-3 font-medium">Leonardo.AI</span>
+            </a>
+            <a
+              href="#"
+              data-ai="runway"
+              class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-pink-100 rounded-full"
+              >
+                <i class="ri-movie-line text-xl text-pink-600"></i>
+              </div>
+              <span class="ml-3 font-medium">Runway ML (Gen-2)</span>
+            </a>
+            <a
+              href="#"
+              data-ai="deepfloyd"
+              class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-indigo-100 rounded-full"
+              >
+                <i class="ri-bubble-chart-line text-xl text-indigo-600"></i>
+              </div>
+              <span class="ml-3 font-medium">DeepFloyd IF</span>
+            </a>
+            <a
+              href="#"
+              data-ai="firefly"
+              class="ai-service flex items-center p-3 rounded-lg hover:bg-gray-800 transition-colors cursor-pointer border border-transparent hover:border-gray-700"
+            >
+              <div
+                class="w-10 h-10 flex items-center justify-center bg-red-100 rounded-full"
+              >
+                <i class="ri-adobe-line text-xl text-red-600"></i>
+              </div>
+              <span class="ml-3 font-medium">Adobe Firefly</span>
+            </a>
+          </div>
+        </div>
+        <div class="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-gray-700">
+          <div class="text-xs text-gray-500 mb-1 sm:mb-2">© 2025 AI Hub</div>
+          <div class="text-xs text-gray-400">
+            Select an AI model to start chatting
+          </div>
+        </div>
+      </div>
+    </nav>
+    <main class="container mx-auto px-3 sm:px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
+      <div class="max-w-4xl mx-auto">
+        <div
+          id="welcomeContainer"
+          class="bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 max-w-4xl mx-auto mb-4 sm:mb-6"
+        >
+          <div class="text-center py-4 sm:py-8">
+            <h2 class="text-xl sm:text-2xl font-semibold mb-3 sm:mb-4">
+              Welcome to AI Hub
+            </h2>
+            <p class="text-gray-400 mb-4 sm:mb-6 px-2">
+              Your unified interface for interacting with multiple AI models
+            </p>
+            <p class="text-gray-400 mb-4 sm:mb-6 px-2 text-sm sm:text-base">
+              AI Hub provides a seamless experience to interact with various AI
+              assistants through a single interface. Access ChatGPT, Gemini,
+              Claude, and more from the menu.
+            </p>
+            <div class="flex justify-center mt-6 sm:mt-8">
+              <button
+                id="openMenuBtn"
+                class="px-4 sm:px-6 py-2 sm:py-3 bg-primary text-white rounded-button hover:bg-secondary transition-colors whitespace-nowrap flex items-center"
+              >
+                <i class="ri-menu-line mr-2"></i> Open AI Menu
+              </button>
+            </div>
+            <p class="text-gray-400 mt-6 sm:mt-8 text-xs sm:text-sm px-4">
+              Click the menu button or use the hamburger icon to select an AI
+              model
+            </p>
+          </div>
+        </div>
+        <div
+          id="chatContainer"
+          class="bg-gray-800 rounded-lg shadow-sm p-4 sm:p-6 max-w-4xl mx-auto"
+        >
+          <div
+            id="chatHeader"
+            class="flex items-center justify-between mb-4 sm:mb-6 pb-3 sm:pb-4 border-b border-gray-700"
+          >
+            <div class="flex items-center">
+              <div
+                id="chatIcon"
+                class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center bg-primary bg-opacity-10 rounded-full mr-2 sm:mr-3"
+              >
+                <i
+                  id="chatIconClass"
+                  class="ri-openai-line text-lg sm:text-xl text-primary"
+                ></i>
+              </div>
+              <h3 id="chatTitle" class="text-lg sm:text-xl font-medium">
+                ChatGPT
+              </h3>
+            </div>
+            <div class="text-xs sm:text-sm text-gray-500">
+              <span id="currentDate">2025-03-27</span>
+            </div>
+          </div>
+          <div
+            id="chatMessages"
+            class="space-y-4 sm:space-y-6 mb-4 sm:mb-6 h-[calc(100vh-240px)] min-h-[300px] sm:min-h-[400px] overflow-y-auto p-2 scrollbar-thin"
+          >
+            <div class="flex justify-start fade-in">
+              <div
+                class="bg-gray-700 text-gray-100 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[85%] sm:max-w-[80%]"
+              >
+                <p>Hello! I'm an AI assistant. How can I help you today?</p>
+              </div>
+            </div>
+          </div>
+          <div class="border-t border-gray-700 pt-3 sm:pt-4">
+            <div class="flex flex-col sm:flex-row">
+              <div
+                class="flex items-center attachment-buttons w-full sm:w-auto mb-2 sm:mb-0"
+              >
+                <button
+                  id="attachButton"
+                  class="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors w-10 h-10 flex items-center justify-center"
+                >
+                  <i class="ri-attachment-2"></i>
+                </button>
+                <button
+                  id="imageButton"
+                  class="text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors w-10 h-10 flex items-center justify-center ml-1"
+                >
+                  <i class="ri-image-line"></i>
+                </button>
+              </div>
+              <div class="flex-1 flex flex-col sm:flex-row input-container">
+                <input
+                  type="text"
+                  id="messageInput"
+                  class="w-full px-3 sm:px-4 py-2 sm:py-3 bg-gray-700 rounded-lg sm:rounded-r-none border-none focus:outline-none text-gray-100 text-sm sm:text-base"
+                  placeholder="Type your message..."
+                />
+                <button
+                  id="sendButton"
+                  class="mt-2 sm:mt-0 sm:ml-0 px-4 sm:px-5 py-2 sm:py-3 bg-primary text-white rounded-button sm:rounded-l-none hover:bg-secondary transition-colors whitespace-nowrap flex items-center justify-center"
+                >
+                  <i class="ri-send-plane-fill mr-1"></i> Send
+                </button>
+              </div>
+            </div>
+            <div
+              id="attachmentsContainer"
+              class="mt-3 flex flex-wrap gap-2 hidden"
+            ></div>
+            <div class="mt-2 text-xs text-gray-400 text-center">
+              AI Hub provides a unified interface to interact with multiple AI
+              models
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+    <input type="file" id="fileInput" class="hidden" multiple />
+    <input
+      type="file"
+      id="imageInput"
+      class="hidden"
+      accept="image/*"
+      multiple
+    />
+    <script>
+      // Mock data for AI responses
+      const mockResponses = {
+        chatgpt: [
+          "Hello! I'm ChatGPT, an AI assistant created by OpenAI. How can I help you today?",
+          "That's an interesting question. Let me think about it...",
+          "Based on my training data, I can provide you with several perspectives on this topic.",
+        ],
+        gemini: [
+          "Hi there! I'm Gemini, Google's AI assistant. I'm here to assist you with any questions or tasks.",
+          "I can help with that. Let me gather some information first.",
+          "Here's what I found based on my understanding of your request.",
+        ],
+        claude: [
+          "Hello! I'm Claude, an AI assistant by Anthropic. I'm designed to be helpful, harmless, and honest.",
+          "I'd be happy to explore that topic with you. Let's break it down step by step.",
+          "That's a nuanced question. Here are some considerations to keep in mind...",
+        ],
+        copilot: [
+          "Hi, I'm Microsoft Copilot. I'm here to help you with your questions and tasks.",
+          "I can assist with that. Let me search for some relevant information.",
+          "Based on the information available to me, here's what I can tell you.",
+        ],
+        perplexity: [
+          "Hello! I'm Perplexity AI. I can help you find and understand information on virtually any topic.",
+          "Let me search for the most up-to-date information on that for you.",
+          "Here's what I found from searching across multiple sources.",
+        ],
+        deepseek: [
+          "Hi there! I'm DeepSeek, an advanced AI assistant. How can I help you today?",
+          "I can certainly help with that. Let me analyze this for you.",
+          "Based on my understanding, here's a comprehensive answer to your question.",
+        ],
+        groq: [
+          "Hello! I'm Groq's AI assistant. I'm designed for extremely fast responses. How can I assist you?",
+          "I can help with that right away. Let me process your request.",
+          "Here's my analysis based on the information you've provided.",
+        ],
+        mistral: [
+          "Hi! I'm Mistral AI's assistant. I'm here to provide you with helpful and accurate information.",
+          "I'd be happy to help with that. Let me think through this carefully.",
+          "Based on my training, here's what I can tell you about your question.",
+        ],
+        dalle: [
+          "Hello! I'm DALL-E 3 by OpenAI. I can generate images from your text descriptions. What would you like me to create?",
+          "I'll create an image based on your description. Please provide details about what you'd like to see.",
+          "I've generated an image based on your prompt. Let me know if you'd like any adjustments.",
+        ],
+        stability: [
+          "Hi there! I'm Stability AI's image generator. I can create images using SDXL or Stable Diffusion 3. What would you like me to generate?",
+          "I'll generate an image based on your description. Feel free to be as detailed as possible.",
+          "Here's the image I've created based on your prompt. Would you like me to make any changes?",
+        ],
+        leonardo: [
+          "Hello! I'm Leonardo.AI. I can generate high-quality images from your text descriptions. What would you like me to create?",
+          "I'll create an image based on your prompt. Please provide as much detail as possible for best results.",
+          "I've generated an image based on your description. Let me know if you'd like any adjustments.",
+        ],
+        runway: [
+          "Hi! I'm Runway ML's Gen-2. I can generate video content from your descriptions. What would you like me to create?",
+          "I'll generate a video based on your prompt. Please describe what you'd like to see.",
+          "I've created a video based on your description. Let me know what you think.",
+        ],
+        deepfloyd: [
+          "Hello! I'm DeepFloyd IF by Stability AI. I can generate detailed images from your descriptions. What would you like me to create?",
+          "I'll generate an image based on your prompt. Feel free to be specific about what you want to see.",
+          "Here's the image I've created based on your description. Would you like any adjustments?",
+        ],
+        firefly: [
+          "Hi there! I'm Adobe Firefly. I can generate images, textures, and effects. What would you like me to create?",
+          "I'll generate content based on your description. Adobe Firefly is designed for commercial use with ethically sourced training data.",
+          "I've created an image based on your prompt. Let me know if you'd like any adjustments.",
+        ],
+      };
+      // AI configuration data
+      const aiConfig = {
+        chatgpt: {
+          name: "ChatGPT",
+          icon: "ri-openai-line",
+          bgColor: "bg-primary bg-opacity-10",
+          textColor: "text-primary",
+        },
+        gemini: {
+          name: "Gemini",
+          icon: "ri-google-line",
+          bgColor: "bg-blue-100",
+          textColor: "text-blue-600",
+        },
+        claude: {
+          name: "Claude",
+          icon: "ri-robot-line",
+          bgColor: "bg-purple-100",
+          textColor: "text-purple-600",
+        },
+        copilot: {
+          name: "Copilot",
+          icon: "ri-microsoft-line",
+          bgColor: "bg-blue-100",
+          textColor: "text-blue-600",
+        },
+        perplexity: {
+          name: "Perplexity AI",
+          icon: "ri-brain-line",
+          bgColor: "bg-green-100",
+          textColor: "text-green-600",
+        },
+        deepseek: {
+          name: "DeepSeek",
+          icon: "ri-cpu-line",
+          bgColor: "bg-orange-100",
+          textColor: "text-orange-600",
+        },
+        groq: {
+          name: "Groq",
+          icon: "ri-terminal-box-line",
+          bgColor: "bg-red-100",
+          textColor: "text-red-600",
+        },
+        mistral: {
+          name: "Mistral AI",
+          icon: "ri-cloud-line",
+          bgColor: "bg-teal-100",
+          textColor: "text-teal-600",
+        },
+        dalle: {
+          name: "DALL-E 3",
+          icon: "ri-openai-line",
+          bgColor: "bg-primary bg-opacity-10",
+          textColor: "text-primary",
+        },
+        stability: {
+          name: "Stability AI",
+          icon: "ri-bubble-chart-line",
+          bgColor: "bg-indigo-100",
+          textColor: "text-indigo-600",
+        },
+        leonardo: {
+          name: "Leonardo.AI",
+          icon: "ri-brush-line",
+          bgColor: "bg-yellow-100",
+          textColor: "text-yellow-600",
+        },
+        runway: {
+          name: "Runway ML",
+          icon: "ri-movie-line",
+          bgColor: "bg-pink-100",
+          textColor: "text-pink-600",
+        },
+        deepfloyd: {
+          name: "DeepFloyd IF",
+          icon: "ri-bubble-chart-line",
+          bgColor: "bg-indigo-100",
+          textColor: "text-indigo-600",
+        },
+        firefly: {
+          name: "Adobe Firefly",
+          icon: "ri-adobe-line",
+          bgColor: "bg-red-100",
+          textColor: "text-red-600",
+        },
+      };
+      const menuBtn = document.getElementById("menuBtn");
+      const sideMenu = document.getElementById("sideMenu");
+      const menuOverlay = document.getElementById("menuOverlay");
+      const welcomeContainer = document.getElementById("welcomeContainer");
+      const chatContainer = document.getElementById("chatContainer");
+      const chatMessages = document.getElementById("chatMessages");
+      const messageInput = document.getElementById("messageInput");
+      const sendButton = document.getElementById("sendButton");
+      const chatTitle = document.getElementById("chatTitle");
+      const chatIcon = document.getElementById("chatIcon");
+      const chatIconClass = document.getElementById("chatIconClass");
+      const darkModeBtn = document.getElementById("darkModeBtn");
+      const settingsBtn = document.getElementById("settingsBtn");
+      const helpBtn = document.getElementById("helpBtn");
+      const attachButton = document.getElementById("attachButton");
+      const imageButton = document.getElementById("imageButton");
+      const fileInput = document.getElementById("fileInput");
+      const imageInput = document.getElementById("imageInput");
+      const attachmentsContainer = document.getElementById("attachmentsContainer");
+      let currentAI = null;
+      let isDarkMode = false;
+      let attachments = [];
+      // Create modals
+      function createModal(id, title, content) {
+        const modal = document.createElement("div");
+        modal.id = id;
+        modal.className = "modal";
+        modal.innerHTML = `
+      <div class="modal-content shadow-lg p-4 sm:p-6 w-full">
+      <div class="flex justify-between items-center mb-3 sm:mb-4">
+      <h3 class="text-lg sm:text-xl font-semibold">${title}</h3>
+      <button class="close-modal text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors">
+      <i class="ri-close-line text-lg sm:text-xl"></i>
+      </button>
+      </div>
+      <div class="modal-body">
+      ${content}
+      </div>
+      </div>
+      `;
+        document.body.appendChild(modal);
+        const closeBtn = modal.querySelector(".close-modal");
+        closeBtn.addEventListener("click", () => {
+          modal.classList.remove("active");
+        });
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) {
+            modal.classList.remove("active");
+          }
+        });
+        // Add touch event for mobile
+        closeBtn.addEventListener("touchend", () => {
+          modal.classList.remove("active");
+        });
+        return modal;
+      }
+      // Settings modal content
+      const settingsModalContent = `
+      <div class="space-y-5 sm:space-y-6">
+      <div class="border-b border-gray-700 pb-4">
+      <h4 class="font-medium mb-2 text-sm sm:text-base">Chat Settings</h4>
+      <div class="space-y-3">
+      <div class="flex items-center justify-between">
+      <span class="text-sm">Auto-scroll to bottom</span>
+      <label class="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" checked class="sr-only peer">
+      <div class="w-10 sm:w-11 h-5 sm:h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-700 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+      </label>
+      </div>
+      <div class="flex items-center justify-between">
+      <span class="text-sm">Sound notifications</span>
+      <label class="relative inline-flex items-center cursor-pointer">
+      <input type="checkbox" class="sr-only peer">
+      <div class="w-10 sm:w-11 h-5 sm:h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-700 after:border after:rounded-full after:h-4 sm:after:h-5 after:w-4 sm:after:w-5 after:transition-all peer-checked:bg-primary"></div>
+      </label>
+      </div>
+      </div>
+      </div>
+      <div>
+      <h4 class="font-medium mb-2 text-sm sm:text-base">API Settings</h4>
+      <div class="space-y-3">
+      <div>
+      <label class="block text-xs sm:text-sm mb-1">OpenAI API Key</label>
+      <input type="password" value="••••••••••••••••••••••" class="w-full px-3 py-2 text-sm border border-gray-600 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20">
+      </div>
+      <div>
+      <label class="block text-xs sm:text-sm mb-1">Google API Key</label>
+      <input type="password" value="••••••••••••••••••••••" class="w-full px-3 py-2 text-sm border border-gray-600 bg-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20">
+      </div>
+      </div>
+      </div>
+      </div>
+      `;
+      // Help modal content
+      const helpModalContent = `
+      <div class="space-y-4 sm:space-y-6">
+      <div class="border-b border-gray-700 pb-3 sm:pb-4">
+      <h4 class="font-medium mb-2 text-sm sm:text-base">About AI Hub</h4>
+      <p class="text-gray-400 text-xs sm:text-sm">AI Hub v1.2.5 - A unified interface for interacting with multiple AI models.</p>
+      <p class="text-gray-400 mt-1 sm:mt-2 text-xs sm:text-sm">© 2025 AI Hub. All rights reserved.</p>
+      </div>
+      <div class="border-b border-gray-700 pb-3 sm:pb-4">
+      <h4 class="font-medium mb-2 text-sm sm:text-base">Supported AI Models</h4>
+      <ul class="list-disc pl-5 text-gray-400 space-y-1 text-xs sm:text-sm">
+      <li>ChatGPT (OpenAI)</li>
+      <li>Gemini (Google)</li>
+      <li>Claude (Anthropic)</li>
+      <li>Copilot (Microsoft)</li>
+      <li>Perplexity AI</li>
+      <li>DeepSeek</li>
+      <li>Groq</li>
+      <li>Mistral AI</li>
+      </ul>
+      </div>
+      <div class="border-b border-gray-700 pb-3 sm:pb-4">
+      <h4 class="font-medium mb-2 text-sm sm:text-base">Image Generation Models</h4>
+      <ul class="list-disc pl-5 text-gray-400 space-y-1 text-xs sm:text-sm">
+      <li>DALL-E 3 (OpenAI)</li>
+      <li>Stability AI (SDXL, Stable Diffusion 3)</li>
+      <li>Leonardo.AI</li>
+      <li>Runway ML (Gen-2 for video)</li>
+      <li>DeepFloyd IF (Stability AI)</li>
+      <li>Adobe Firefly</li>
+      </ul>
+      </div>
+      <div>
+      <h4 class="font-medium mb-2 text-sm sm:text-base">System Information</h4>
+      <div class="bg-gray-700 p-2 sm:p-3 rounded-lg text-xs sm:text-sm font-mono">
+      <p>Browser: Chrome 125.0.6383.121</p>
+      <p>OS: Windows 11 Pro</p>
+      <p>Screen: <span id="screenInfo">1920x1080</span></p>
+      <p>Last Updated: 2025-03-27</p>
+      </div>
+      </div>
+      </div>
+      `;
+      // Create modals
+      const settingsModal = createModal(
+        "settingsModal",
+        "Settings",
+        settingsModalContent,
+      );
+      const helpModal = createModal(
+        "helpModal",
+        "Help & Information",
+        helpModalContent,
+      );
+      // Event listeners for buttons
+      settingsBtn.addEventListener("click", () => {
+        settingsModal.classList.add("active");
+        // Update dark mode toggle to match current state
+        const darkModeToggle = document.getElementById("darkModeToggle");
+        if (darkModeToggle) {
+          darkModeToggle.checked = isDarkMode;
+          darkModeToggle.addEventListener("change", toggleDarkMode);
+        }
+      });
+      helpBtn.addEventListener("click", () => {
+        helpModal.classList.add("active");
+      });
+      menuBtn.addEventListener("click", () => {
+        const isOpen = sideMenu.classList.contains("translate-x-0");
+        sideMenu.classList.toggle("translate-x-0");
+        menuOverlay.classList.toggle("hidden");
+        const spans = menuBtn.getElementsByTagName("span");
+        if (!isOpen) {
+          spans[0].classList.add("rotate-45", "translate-y-2");
+          spans[1].classList.add("opacity-0");
+          spans[2].classList.add("-rotate-45", "-translate-y-2");
+        } else {
+          spans[0].classList.remove("rotate-45", "translate-y-2");
+          spans[1].classList.remove("opacity-0");
+          spans[2].classList.remove("-rotate-45", "-translate-y-2");
+        }
+      });
+      menuOverlay.addEventListener("click", () => {
+        sideMenu.classList.remove("translate-x-0");
+        menuOverlay.classList.add("hidden");
+        const spans = menuBtn.getElementsByTagName("span");
+        spans[0].classList.remove("rotate-45", "translate-y-2");
+        spans[1].classList.remove("opacity-0");
+        spans[2].classList.remove("-rotate-45", "-translate-y-2");
+      });
+      // Add event listeners to AI service links
+      document.querySelectorAll(".ai-service").forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          const aiType = link.getAttribute("data-ai");
+          openChat(aiType);
+          // Close the menu after selection
+          sideMenu.classList.remove("translate-x-0");
+          menuOverlay.classList.add("hidden");
+          const spans = menuBtn.getElementsByTagName("span");
+          spans[0].classList.remove("rotate-45", "translate-y-2");
+          spans[1].classList.remove("opacity-0");
+          spans[2].classList.remove("-rotate-45", "-translate-y-2");
+        });
+      });
+      function openChat(aiType) {
+        currentAI = aiType;
+        const ai = aiConfig[aiType];
+        // Update chat header
+        chatTitle.textContent = ai.name;
+        chatIcon.className = `w-10 h-10 flex items-center justify-center ${ai.bgColor} rounded-full mr-3`;
+        chatIconClass.className = `${ai.icon} text-xl ${ai.textColor}`;
+        // Clear previous messages
+        chatMessages.innerHTML = "";
+        // Add welcome message
+        addMessage(mockResponses[aiType][0], "ai");
+        // Update current date
+        document.getElementById("currentDate").textContent = "2025-03-27";
+        // Show chat container and hide welcome screen
+        welcomeContainer.classList.add("hidden");
+        chatContainer.classList.remove("hidden");
+        // Clear any existing attachments
+        clearAttachments();
+      }
+      function showWelcome() {
+        welcomeContainer.classList.remove("hidden");
+        chatContainer.classList.add("hidden");
+      }
+      function addMessage(text, sender, attachedFiles = []) {
+        const messageDiv = document.createElement("div");
+        messageDiv.className =
+          sender === "user"
+            ? "flex justify-end fade-in"
+            : "flex justify-start fade-in";
+        const messageBubble = document.createElement("div");
+        messageBubble.className =
+          sender === "user"
+            ? "bg-primary text-white rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[85%] sm:max-w-[80%] text-sm sm:text-base"
+            : "bg-gray-700 text-gray-100 rounded-lg py-2 sm:py-3 px-3 sm:px-4 max-w-[85%] sm:max-w-[80%] text-sm sm:text-base";
+        // Add text content
+        const paragraph = document.createElement("p");
+        paragraph.textContent = text;
+        messageBubble.appendChild(paragraph);
+        // Add attachments if any
+        if (attachedFiles.length > 0) {
+          const attachmentsDiv = document.createElement("div");
+          attachmentsDiv.className = "mt-2 space-y-2";
+          attachedFiles.forEach((file) => {
+            const fileElement = document.createElement("div");
+            fileElement.className =
+              "flex items-center p-2 bg-gray-600 bg-opacity-50 rounded text-xs sm:text-sm";
+            // Icon based on file type
+            const iconElement = document.createElement("i");
+            if (file.type.startsWith("image/")) {
+              iconElement.className = "ri-image-line mr-2";
+              // For images, add a preview
+              const imgPreview = document.createElement("img");
+              imgPreview.src = file.preview || URL.createObjectURL(file);
+              imgPreview.className =
+                "w-full mt-2 rounded max-h-32 sm:max-h-40 object-contain";
+              fileElement.appendChild(iconElement);
+              fileElement.appendChild(document.createTextNode(file.name));
+              attachmentsDiv.appendChild(fileElement);
+              attachmentsDiv.appendChild(imgPreview);
+            } else {
+              iconElement.className = "ri-file-line mr-2";
+              fileElement.appendChild(iconElement);
+              fileElement.appendChild(document.createTextNode(file.name));
+              attachmentsDiv.appendChild(fileElement);
+            }
+          });
+          messageBubble.appendChild(attachmentsDiv);
+        }
+        messageDiv.appendChild(messageBubble);
+        chatMessages.appendChild(messageDiv);
+        // Scroll to bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+      // Handle file attachments
+      function handleFileAttachment(files) {
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i];
+          attachments.push(file);
+          // Create attachment preview
+          const attachmentElement = document.createElement("div");
+          attachmentElement.className =
+            "flex items-center bg-gray-700 rounded-lg p-2 pr-3 text-xs sm:text-sm";
+          // Icon based on file type
+          const iconElement = document.createElement("i");
+          if (file.type.startsWith("image/")) {
+            iconElement.className = "ri-image-line mr-2";
+          } else {
+            iconElement.className = "ri-file-line mr-2";
+          }
+          const fileNameElement = document.createElement("span");
+          fileNameElement.className = "text-gray-300 mr-2";
+          // Adjust filename length based on screen size
+          const maxLength = window.innerWidth < 640 ? 15 : 20;
+          fileNameElement.textContent =
+            file.name.length > maxLength
+              ? file.name.substring(0, maxLength - 3) + "..."
+              : file.name;
+          const removeButton = document.createElement("button");
+          removeButton.className = "text-gray-400 hover:text-gray-200 ml-auto";
+          removeButton.innerHTML = '<i class="ri-close-line"></i>';
+          removeButton.onclick = function () {
+            attachmentElement.remove();
+            attachments = attachments.filter((a) => a !== file);
+            if (attachments.length === 0) {
+              attachmentsContainer.classList.add("hidden");
+            }
+          };
+          attachmentElement.appendChild(iconElement);
+          attachmentElement.appendChild(fileNameElement);
+          attachmentElement.appendChild(removeButton);
+          attachmentsContainer.appendChild(attachmentElement);
+        }
+        if (attachments.length > 0) {
+          attachmentsContainer.classList.remove("hidden");
+        }
+      }
+      function clearAttachments() {
+        attachments = [];
+        attachmentsContainer.innerHTML = "";
+        attachmentsContainer.classList.add("hidden");
+      }
+      // Send message function
+      function sendMessage() {
+        const message = messageInput.value.trim();
+        if ((message || attachments.length > 0) && currentAI) {
+          // Add user message with attachments
+          addMessage(message, "user", attachments);
+          // Clear input and attachments
+          messageInput.value = "";
+          clearAttachments();
+          // Simulate AI response after a short delay
+          setTimeout(() => {
+            // Get random response from mock data
+            const responses = mockResponses[currentAI];
+            const randomResponse =
+              responses[Math.floor(Math.random() * responses.length)];
+            // If user sent files, acknowledge them in the response
+            let aiResponse = randomResponse;
+            if (attachments.length > 0) {
+              aiResponse = `I've received your files. ${randomResponse}`;
+            }
+            addMessage(aiResponse, "ai");
+          }, 1000);
+        }
+      }
+      // Add event listeners for sending messages
+      sendButton.addEventListener("click", sendMessage);
+      messageInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+          sendMessage();
+        }
+      });
+      // Set up file attachment buttons
+      attachButton.addEventListener("click", () => {
+        fileInput.click();
+      });
+      imageButton.addEventListener("click", () => {
+        imageInput.click();
+      });
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          handleFileAttachment(e.target.files);
+          fileInput.value = ""; // Reset input
+        }
+      });
+      imageInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          handleFileAttachment(e.target.files);
+          imageInput.value = ""; // Reset input
+        }
+      });
+      // Add event listener for open menu button
+      const openMenuBtn = document.getElementById("openMenuBtn");
+      if (openMenuBtn) {
+        openMenuBtn.addEventListener("click", () => {
+          sideMenu.classList.add("translate-x-0");
+          menuOverlay.classList.remove("hidden");
+          const spans = menuBtn.getElementsByTagName("span");
+          spans[0].classList.add("rotate-45", "translate-y-2");
+          spans[1].classList.add("opacity-0");
+          spans[2].classList.add("-rotate-45", "-translate-y-2");
+        });
+      }
+      window.addEventListener("load", () => {
+        // API keys are pre-configured
+        // Show welcome screen on load
+        showWelcome();
+        document.getElementById("currentDate").textContent = "2025-03-27";
+        // Add home link functionality
+        const homeLink = document.getElementById("homeLink");
+        homeLink.addEventListener("click", () => {
+          // Show welcome screen
+          showWelcome();
+        });
+        // Update screen info in help modal
+        if (document.getElementById("screenInfo")) {
+          document.getElementById("screenInfo").textContent =
+            `${window.innerWidth}x${window.innerHeight}`;
+        }
+        // Handle resize events for responsive design
+        window.addEventListener("resize", () => {
+          if (document.getElementById("screenInfo")) {
+            document.getElementById("screenInfo").textContent =
+              `${window.innerWidth}x${window.innerHeight}`;
+          }
+          // Adjust UI elements based on screen size
+          const isMobile = window.innerWidth < 640;
+          // Adjust message input container
+          const inputContainer = document.querySelector(".input-container");
+          if (inputContainer) {
+            if (isMobile) {
+              inputContainer.classList.add("flex-col");
+            } else {
+              inputContainer.classList.remove("flex-col");
+            }
+          }
+        });
+        // Ensure the side menu is properly initialized
+        const aiServiceLinks = document.querySelectorAll(".ai-service");
+        if (aiServiceLinks.length > 0) {
+          // Make sure the menu is visible initially to verify the links are working
+          setTimeout(() => {
+            // Open menu automatically on first load to show the AI options
+            sideMenu.classList.add("translate-x-0");
+            menuOverlay.classList.remove("hidden");
+            const spans = menuBtn.getElementsByTagName("span");
+            spans[0].classList.add("rotate-45", "translate-y-2");
+            spans[1].classList.add("opacity-0");
+            spans[2].classList.add("-rotate-45", "-translate-y-2");
+            // Close it after 2 seconds
+            setTimeout(() => {
+              sideMenu.classList.remove("translate-x-0");
+              menuOverlay.classList.add("hidden");
+              spans[0].classList.remove("rotate-45", "translate-y-2");
+              spans[1].classList.remove("opacity-0");
+              spans[2].classList.remove("-rotate-45", "-translate-y-2");
+            }, 2000);
+          }, 500);
+        }
+        // Fix for mobile devices - ensure proper touch handling
+        if ("ontouchstart" in window) {
+          document.querySelectorAll(".ai-service").forEach((service) => {
+            service.addEventListener("touchstart", function () {
+              this.classList.add("bg-gray-800");
+            });
+            service.addEventListener("touchend", function () {
+              this.classList.remove("bg-gray-800");
+            });
+          });
+        }
+      });
+    </script>
+  </body>
+</html>
